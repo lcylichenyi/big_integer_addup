@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<div id="app">
+    <input v-model="num1" placeholder="请输入数字">
+    +
+    <input v-model="num2" placeholder="请输入数字">
+    =
+    {{sum}}
+    <br />
+    <p>如果直接用普通的加法运算结果为：{{sum2}}</p>
+    <p>是否和大数运算的结果相同：{{flag}}</p>
+    <p v-show="!flag && num1 && num2 && flag!==''">这时候如果用普通方法已经出现了误差</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            num1: '',
+            num2: '',
+            flag: '',
+            sum2:''
+        },
+        computed: {
+            sum(){
+                let n1 = this.num1 || '0'
+                let n2 = this.num2 || '0'
+
+
+                //防止输入其他字符
+                if(Number(n1) != n1 || Number(n2) != n2 ){
+                    this.sum2 = ''
+                    this.flag = ''
+                    return '请不要输入其他的字符'
+                }
+
+                //防止输入小数
+                if( Math.round(n1) != Number(n1) ||  Math.round(n2) != Number(n2) || n1[n1.length-1] =='.'|| n2[n2.length] == '.'){
+                    this.sum2 = ''
+                    this.flag = ''
+                    return '请输入整数'
+                }
+
+                //输入正整数(我这里就不考虑减法了，大致意思是一样的)
+                if( Number(n1)< 0 ||Number(n2)<0){
+                    this.sum2 = ''
+                    this.flag = ''
+                    return '请输入正整数'
+                }
+
+
+                //判断是否跳出父函数
+                let breakout = false
+                //科学计数法的话要转换一下
+                function scientific_notation_transform(numberstring) {
+                    let temp_split_e = numberstring.split('e+')
+                    let temp_split_point = temp_split_e[0].split('.')
+                    let after_point_length = temp_split_point[1] != undefined ? temp_split_point[1].length : 0
+                    if(after_point_length){
+                        //如果存在小数点
+                        //如果e后数字不如小数点后数字多,转换完还是小数
+                        if(after_point_length >  temp_split_e[1] ){
+                            breakout = true
+                        }else {
+                            let zero_compensation_number = Number(temp_split_e[1]) - Number(after_point_length)
+                            numberstring = temp_split_point[0] + temp_split_point[1]
+                            numberstring = numberstring.padEnd(numberstring.length + zero_compensation_number, 0)
+                        }
+
+                    }else{
+                        //如果不存在小数点
+                        numberstring = temp_split_point[0].padEnd(temp_split_e[0].length + Number(temp_split_e[1]),0)
+                    }
+                    return numberstring
+                }
+
+                if( n1.indexOf('e+') !== -1){
+                    n1 = scientific_notation_transform(n1)
+                }
+                if( n2.indexOf('e+') !==-1){
+                    n2 = scientific_notation_transform(n2)
+                }
+                if( breakout){ return 请输入整数}
+
+
+                //正常情况下将n1和n2转化为数组形式用于运算
+                let length = n1.length > n2.length ? n1.length : n2.length
+                n1 = n1.padStart(length,0)
+                n2 = n2.padStart(length,0)
+                n1 = [...n1].map( item => Number.parseInt(item) ).reverse()
+                n2 = [...n2].map( item => Number.parseInt(item) ).reverse()
+
+
+                let arr = new Array(length+1).fill(null)
+                for( let i=0; i < length ;i++){
+                    let addup = n1[i] + n2[i]
+                    if( addup >= 10 ){
+                        arr[i+1] += 1
+                        arr[i] += Number.parseInt(addup%10)
+                    }else {
+                        arr[i] += Number.parseInt(addup)
+                        if( arr[i] === 10) {
+                            arr[i] = 0
+                            arr[i+1] += 1
+                        }
+                    }
+                }
+                arr = arr.reverse().join('')
+                if(arr){
+                    this.sum2 = Number.parseInt(scientific_notation_transform(this.num1)) + Number.parseInt(scientific_notation_transform(this.num2))||this.num1||this.num2
+                    this.flag =  Number.parseInt(arr) === Number.parseInt(this.sum2) ? true : false
+                    return arr
+                }else{
+                    return ''
+                }
+            }
+
+        }
+    })
+</script>
+</body>
+</html>
