@@ -31,8 +31,8 @@
         },
         computed: {
             sum(){
-                let n1 = this.num1 || '0'
-                let n2 = this.num2 || '0'
+                let n1 = this.num1.trim() || '0'
+                let n2 = this.num2.trim() || '0'
 
 
                 //防止输入其他字符
